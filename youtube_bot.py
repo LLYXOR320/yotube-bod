@@ -242,5 +242,6 @@ def handle_callback(call):
         bot.send_message(call.message.chat.id, f"❌ Ошибка: {str(e)[:300]}")
 
 if __name__ == "__main__":
+    bot.remove_webhook()  # <--- ЭТА СТРОКА ДОБАВЛЕНА
     print("🚀 Бот запущен!")
     bot.infinity_polling()
