@@ -2,11 +2,48 @@ import os
 import re
 import time
 import telebot
+import tempfile
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import yt_dlp
-import subprocess
 
-# === КОНФИГУРАЦИЯ ===
+# ==================================================
+# 1. ВСТАВЬ СВОИ КУКИ В ПЕРЕМЕННУЮ НИЖЕ
+# ==================================================
+COOKIES_STRING = """# Netscape HTTP Cookie File
+[# Netscape HTTP Cookie File
+# https://curl.haxx.se/rfc/cookie_spec.html
+# This is a generated file! Do not edit.
+
+.youtube.com	TRUE	/	TRUE	1798149841	VISITOR_INFO1_LIVE	MU0Lzr6KuLo
+.youtube.com	TRUE	/	TRUE	1798149841	VISITOR_PRIVACY_METADATA	CgJSVRIEGgAgMw%3D%3D
+.youtube.com	TRUE	/	FALSE	1816565473	HSID	ABdJsO3jb2U2z8vCu
+.youtube.com	TRUE	/	TRUE	1816565473	SSID	AjEz-RS53LYKubnGd
+.youtube.com	TRUE	/	FALSE	1816565473	APISID	D77dFzfSuNJBjJIe/AF6IT_iyHSpd6jLx7
+.youtube.com	TRUE	/	TRUE	1816565473	SAPISID	mwgVH0_i7f0imNcz/A4fAYDzHM1jqJfTrn
+.youtube.com	TRUE	/	TRUE	1816565473	__Secure-1PAPISID	mwgVH0_i7f0imNcz/A4fAYDzHM1jqJfTrn
+.youtube.com	TRUE	/	TRUE	1816565473	__Secure-3PAPISID	mwgVH0_i7f0imNcz/A4fAYDzHM1jqJfTrn
+.youtube.com	TRUE	/	FALSE	1816565475	SID	g.a000_Qi_Tqr7e1MtTjwHtKvm7hmGIBL9okFKS-ewaNVCEfpPqsr34HTdL4tpWtIA6Hlm4McOeQACgYKAVASARUSFQHGX2MiQlmK0VSvDVnuPi4Yl8pBUhoVAUF8yKrLZmSHz6_eQ_i1_6whszi40076
+.youtube.com	TRUE	/	TRUE	1816565475	__Secure-1PSID	g.a000_Qi_Tqr7e1MtTjwHtKvm7hmGIBL9okFKS-ewaNVCEfpPqsr3gwQe7pLRB2aULMMMma-A4gACgYKAe0SARUSFQHGX2MiEb2-iS6XL2R-4E_tOOUCyBoVAUF8yKqmxcO4r8DxxC56p4dbDict0076
+.youtube.com	TRUE	/	TRUE	1816565475	__Secure-3PSID	g.a000_Qi_Tqr7e1MtTjwHtKvm7hmGIBL9okFKS-ewaNVCEfpPqsr3L_CrWTvKyjbslcDodyXuSQACgYKATYSARUSFQHGX2Mi8iLnS-1HxNGvwVm8p8y24hoVAUF8yKrf8NKM7YmgLWaSkh3oljO60076
+.youtube.com	TRUE	/	TRUE	1816688031	LOGIN_INFO	AFmmF2swRQIhAOAfT8A6MOOoouK71BOe28FeEewJFC_W506V0kZS5SscAiA1RVMQ1VsEmj5UvL7luCxQi9iXvQrZhJAOmO90Mipc7w:QUQ3MjNmd1dGZXp0UzYzOTFEbkp6QWVZRHlydVBvVmNEZmJlU0FBcXdzcU9mZVBScS15X04yT1gwLW9rbS1vSnNBY2s3OGh2SEhxaGNoRXhnWmxqVm9iQXhYbVRYTjFYU1BqUjZQMlgxNnh0Y0NOVEowLXRpQnVsWVVxSmRhZnlkSGFhSm1JQVFJZG54Wk4zVGRfOUw2RENDUi1QV2ktZFRR
+.youtube.com	TRUE	/	TRUE	1817225962	PREF	f6=40000000&tz=Europe.Moscow&f7=100&f5=30000
+.youtube.com	TRUE	/	TRUE	1798148335	__Secure-YNID	19.YT=DIZdgrsD1BvDhG9_sim3gGKJFhNN8QT-8_S-rauRB--CWq-5rFcgHIOv9PTIxgbWmzIrw286L_ahlKdUBcmTuozxIZqzDHsdc5hcGdkYXswK6EBFzVdWTl3cwICAh3RRRksdaIUiU-E2DMijcWcqL6L6fdOVFlPFdHh9GWLL3B1IxqNqv5badlgrPYb5Fv2fVvrk9L5AvfPJ_3v9RwH-FEs7Mv-gQepeNMviBpG4yO0OHUodERL-taFm6eEtIFrTgDfMrD-Q1v0Np1Qhpk1QTouyaltysQ3v7teKywG_6sKdxhDKXWOMEkdAUpU7O30s42HVuycs5PjG0EoZNG3eGA
+.youtube.com	TRUE	/	TRUE	1814201824	__Secure-1PSIDTS	sidts-CjYByojQU_WFSqiqLfo_DAE81GRDerDpK7Vi_2k8G5Ht_WcEWqVb5hMyGiuYrHeyj3UnZuiEmsMQAA
+.youtube.com	TRUE	/	TRUE	1782666424	__Secure-1PSIDRTS	sidts-CjYByojQU_WFSqiqLfo_DAE81GRDerDpK7Vi_2k8G5Ht_WcEWqVb5hMyGiuYrHeyj3UnZuiEmsMQAA
+.youtube.com	TRUE	/	TRUE	1814201824	__Secure-3PSIDTS	sidts-CjYByojQU_WFSqiqLfo_DAE81GRDerDpK7Vi_2k8G5Ht_WcEWqVb5hMyGiuYrHeyj3UnZuiEmsMQAA
+.youtube.com	TRUE	/	TRUE	1782666424	__Secure-3PSIDRTS	sidts-CjYByojQU_WFSqiqLfo_DAE81GRDerDpK7Vi_2k8G5Ht_WcEWqVb5hMyGiuYrHeyj3UnZuiEmsMQAA
+.youtube.com	TRUE	/	FALSE	1814201967	SIDCC	AKEyXzV1WSFBk-kkdat0DeCmaZkdDonqqCqhugvyq4wUPMCV8IumbT6SdG74DnbvOhZC4ew2WA
+.youtube.com	TRUE	/	TRUE	1814201967	__Secure-1PSIDCC	AKEyXzWIvNc8rYBLghbzv30z23HkVdH_dl4CDopBJWgu8JkddSVQLE5TQbw2Va7JoyN9yXzl-pY
+.youtube.com	TRUE	/	TRUE	1814201967	__Secure-3PSIDCC	AKEyXzUcOzhzASE8xxrDmMF3dFoyNRWjAX4aHVrUz0wadR78fcdEF-6UrjbJ1M7GQg6wMdnItQ
+.youtube.com	TRUE	/	FALSE	1782666129	ST-3opvp5	session_logininfo=AFmmF2swRQIhAOAfT8A6MOOoouK71BOe28FeEewJFC_W506V0kZS5SscAiA1RVMQ1VsEmj5UvL7luCxQi9iXvQrZhJAOmO90Mipc7w%3AQUQ3MjNmd1dGZXp0UzYzOTFEbkp6QWVZRHlydVBvVmNEZmJlU0FBcXdzcU9mZVBScS15X04yT1gwLW9rbS1vSnNBY2s3OGh2SEhxaGNoRXhnWmxqVm9iQXhYbVRYTjFYU1BqUjZQMlgxNnh0Y0NOVEowLXRpQnVsWVVxSmRhZnlkSGFhSm1JQVFJZG54Wk4zVGRfOUw2RENDUi1QV2ktZFRR
+.youtube.com	TRUE	/	TRUE	1798217961	VISITOR_INFO1_LIVE	MU0Lzr6KuLo
+.youtube.com	TRUE	/	TRUE	1798217961	VISITOR_PRIVACY_METADATA	CgJSVRIEGgAgMw%3D%3D
+.youtube.com	TRUE	/	TRUE	1798115412	__Secure-YNID	19.YT=dw0dlB39NQfcDF1h9KdLxzXoVAFIGwp_xLKNSMwHZ3dIppKc8FModrJauDLdVd9U34YtXqd4Vm9n85ZV9k_kj6XWw-nZZj6Q7tt1A2uHyl2BgjsuCQhZD8GLD9jpiJdhqh_gCcd6zmBtgsafqnxMJBJbAE-L2rDiU3zVHhZN1bBKA1mdhp2rXOl7D5pT2oFDmPtYeHQ2UVF_F_kkVAiH1n9YhQloVLTwTaKOO3Zo_Ui9ESEghKDqneBbfc_i658v_ACR5F0UdCxq9jkE_C2e-5F0cuQDPZttZo4JvKKkF4TQKqgylrcuwuwNW1ha3hv8XKhyN0gcfTTzNK5I_kKq9Q
+.youtube.com	TRUE	/	TRUE	0	YSC	gv-PcuixNYg
+.youtube.com	TRUE	/	TRUE	1798217825	__Secure-ROLLOUT_TOKEN	CMbloLfk3IHPzAEQms-m1oeUlQMYvNy02rOqlQM%3D]
+"""
+# ==================================================
+
 BOT_TOKEN = "8935027291:AAGRZOKKwoAYTVGzH2LfrtY4oSHlhsqEdbk"
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -16,20 +53,20 @@ if not os.path.exists(TEMP_FOLDER):
 
 storage = {}
 
-# === ПРОВЕРКА FFMPEG ===
-def check_ffmpeg():
+def get_cookies_file():
+    """Создаёт временный файл с куками и возвращает его путь"""
     try:
-        subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True)
-        return True
-    except:
-        return False
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+            f.write(COOKIES_STRING)
+            return f.name
+    except Exception as e:
+        print(f"Ошибка создания файла кук: {e}")
+        return None
 
-# === ФУНКЦИЯ ИЗВЛЕЧЕНИЯ ID ===
 def extract_video_id(url):
     patterns = [
         r'(?:youtube\.com\/watch\?v=)([\w-]{11})',
         r'(?:youtu\.be\/)([\w-]{11})',
-        r'(?:youtube\.com\/embed\/)([\w-]{11})',
         r'(?:youtube\.com\/shorts\/)([\w-]{11})'
     ]
     for p in patterns:
@@ -41,147 +78,12 @@ def extract_video_id(url):
 def get_file_size_mb(path):
     return os.path.getsize(path) / (1024 * 1024)
 
-# === УЛУЧШЕННАЯ ЗАГРУЗКА С ДИАГНОСТИКОЙ ===
-def download_with_ytdlp(url, output_path, format_type='video', quality='720'):
-    """
-    Скачивает видео/аудио с YouTube.
-    Возвращает: (путь_к_файлу, название, сообщение_об_ошибке)
-    """
-    
-    # Проверяем FFmpeg
-    if not check_ffmpeg():
-        return None, None, "❌ FFmpeg не установлен! Установите FFmpeg для работы бота."
-    
-    # Базовые опции
-    base_opts = {
-        'quiet': False,  # Включаем вывод для отладки
-        'no_warnings': False,
-        'verbose': True,  # Подробный лог
-        'no_check_certificate': True,
-        'ignoreerrors': True,
-        'extract_flat': False,
-        'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-us,en;q=0.5',
-            'Accept-Encoding': 'gzip,deflate',
-        }
-    }
-    
-    # Настраиваем в зависимости от типа
-    if format_type == 'audio':
-        opts = {
-            **base_opts,
-            'format': 'bestaudio/best',
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
-            'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),
-        }
-    else:
-        # Для видео пробуем разные варианты
-        quality_formats = {
-            '360': ['bestvideo[height<=360]+bestaudio/best[height<=360]', 'best[height<=360]', 'best'],
-            '720': ['bestvideo[height<=720]+bestaudio/best[height<=720]', 'best[height<=720]', 'best'],
-            '1080': ['bestvideo[height<=1080]+bestaudio/best[height<=1080]', 'best[height<=1080]', 'best']
-        }
-        
-        formats_to_try = quality_formats.get(quality, ['best'])
-        
-        last_error = None
-        for fmt in formats_to_try:
-            try:
-                opts = {
-                    **base_opts,
-                    'format': fmt,
-                    'merge_output_format': 'mp4',
-                    'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),
-                    'postprocessors': [{
-                        'key': 'FFmpegVideoConvertor',
-                        'preferedformat': 'mp4',
-                    }]
-                }
-                
-                with yt_dlp.YoutubeDL(opts) as ydl:
-                    info = ydl.extract_info(url, download=True)
-                    title = re.sub(r'[\\/*?:"<>|]', '', info.get('title', 'video'))
-                    
-                    # Ищем скачанный файл
-                    for f in os.listdir(output_path):
-                        if title in f or (info.get('id') and info.get('id') in f):
-                            full_path = os.path.join(output_path, f)
-                            if os.path.isfile(full_path) and time.time() - os.path.getctime(full_path) < 300:
-                                return full_path, title, None
-                    
-                    # Если не нашли по названию
-                    files = [os.path.join(output_path, f) for f in os.listdir(output_path) 
-                            if os.path.isfile(os.path.join(output_path, f))]
-                    if files:
-                        latest = max(files, key=os.path.getctime)
-                        if time.time() - os.path.getctime(latest) < 300:
-                            return latest, title, None
-                    
-                    return None, title, "Файл не найден после загрузки"
-                    
-            except Exception as e:
-                last_error = str(e)
-                print(f"Попытка с форматом {fmt} не удалась: {last_error}")
-                continue
-        
-        return None, None, f"Не удалось скачать видео: {last_error}"
-    
-    # Для аудио
-    try:
-        with yt_dlp.YoutubeDL(opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            title = re.sub(r'[\\/*?:"<>|]', '', info.get('title', 'video'))
-            
-            # Ищем файл
-            for f in os.listdir(output_path):
-                if title in f or (info.get('id') and info.get('id') in f):
-                    full_path = os.path.join(output_path, f)
-                    if os.path.isfile(full_path) and time.time() - os.path.getctime(full_path) < 300:
-                        return full_path, title, None
-            
-            files = [os.path.join(output_path, f) for f in os.listdir(output_path) 
-                    if os.path.isfile(os.path.join(output_path, f))]
-            if files:
-                latest = max(files, key=os.path.getctime)
-                if time.time() - os.path.getctime(latest) < 300:
-                    return latest, title, None
-            
-            return None, title, "Файл не найден после загрузки"
-            
-    except Exception as e:
-        return None, None, f"Ошибка загрузки аудио: {str(e)}"
-
-# === ОЧИСТКА СТАРЫХ ДАННЫХ ===
-def cleanup_storage():
-    current_time = time.time()
-    to_delete = []
-    for key, value in storage.items():
-        if 'timestamp' in value and current_time - value['timestamp'] > 600:
-            to_delete.append(key)
-    for key in to_delete:
-        del storage[key]
-
-# === ОБРАБОТЧИКИ ===
 @bot.message_handler(commands=['start'])
 def start(msg):
-    ffmpeg_status = "✅ Установлен" if check_ffmpeg() else "❌ НЕ УСТАНОВЛЕН!"
-    bot.reply_to(msg, 
-        f"🎬 YouTube Downloader Bot\n\n"
-        f"Отправь ссылку на YouTube.\n"
-        f"FFmpeg: {ffmpeg_status}\n\n"
-        f"Если бот не работает, установи FFmpeg!"
-    )
+    bot.reply_to(msg, "🎬 YouTube Downloader Bot\n\nОтправь ссылку на YouTube")
 
 @bot.message_handler(func=lambda m: True)
 def handle_link(msg):
-    cleanup_storage()
-    
     url = msg.text.strip()
     vid = extract_video_id(url)
     
@@ -190,7 +92,6 @@ def handle_link(msg):
         return
     
     try:
-        # Проверяем доступность
         with yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True, 'extract_flat': True}) as ydl:
             info = ydl.extract_info(url, download=False)
             title = re.sub(r'[\\/*?:"<>|]', '', info.get('title', 'Видео'))
@@ -218,12 +119,10 @@ def handle_link(msg):
                 reply_markup=markup
             )
     except Exception as e:
-        bot.reply_to(msg, f"❌ Ошибка: {str(e)[:300]}")
+        bot.reply_to(msg, f"❌ Ошибка: {str(e)[:200]}")
 
 @bot.callback_query_handler(func=lambda c: True)
 def handle_callback(call):
-    cleanup_storage()
-    
     parts = call.data.split('|')
     action = parts[0]
     key = parts[-1]
@@ -231,11 +130,6 @@ def handle_callback(call):
     data = storage.get(key)
     if not data:
         bot.answer_callback_query(call.id, "❌ Данные устарели.")
-        bot.edit_message_text(
-            "⏳ Отправь ссылку заново.",
-            call.message.chat.id,
-            call.message.message_id
-        )
         return
     
     url = data['url']
@@ -244,7 +138,7 @@ def handle_callback(call):
     
     bot.answer_callback_query(call.id, "⏳ Загрузка...")
     bot.edit_message_text(
-        f"⏳ Загружаю <b>{title}</b>...\nЭто может занять до 2 минут.",
+        f"⏳ Загружаю <b>{title}</b>...",
         call.message.chat.id,
         call.message.message_id,
         parse_mode='HTML'
@@ -254,81 +148,98 @@ def handle_callback(call):
         format_type = 'audio' if action == 'a' else 'video'
         quality = parts[2] if action == 'v' else '720'
         
-        # Скачиваем с диагностикой
-        file_path, downloaded_title, error_msg = download_with_ytdlp(
-            url, TEMP_FOLDER, format_type, quality
-        )
+        # ==================================================
+        # 2. НАСТРОЙКИ YT-DLP С КУКАМИ (ОНИ ЗДЕСЬ)
+        # ==================================================
+        opts = {
+            'quiet': True,
+            'no_warnings': True,
+            'no_check_certificate': True,
+            'cookiefile': get_cookies_file(),  # <--- КУКИ ПОДСТАВЛЯЮТСЯ АВТОМАТИЧЕСКИ
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            }
+        }
+        # ==================================================
         
-        if error_msg:
-            bot.send_message(
-                call.message.chat.id,
-                f"❌ Ошибка загрузки:\n<code>{error_msg[:500]}</code>\n\n"
-                f"💡 Решения:\n"
-                f"1. Установи FFmpeg (см. /start)\n"
-                f"2. Проверь ссылку\n"
-                f"3. Попробуй другое качество\n"
-                f"4. Включи VPN (если YouTube заблокирован)",
-                parse_mode='HTML'
-            )
-            return
+        if format_type == 'audio':
+            opts.update({
+                'format': 'bestaudio/best',
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                    'preferredquality': '192',
+                }],
+                'outtmpl': os.path.join(TEMP_FOLDER, '%(title)s.%(ext)s'),
+            })
+        else:
+            quality_map = {
+                '360': 'best[height<=360]',
+                '720': 'best[height<=720]',
+                '1080': 'best[height<=1080]'
+            }
+            opts.update({
+                'format': quality_map.get(quality, 'best'),
+                'outtmpl': os.path.join(TEMP_FOLDER, '%(title)s.%(ext)s'),
+            })
         
-        if not file_path or not os.path.exists(file_path):
-            bot.send_message(call.message.chat.id, "❌ Файл не создан. Попробуй другое качество.")
-            return
-        
-        # Проверяем размер
-        size_mb = get_file_size_mb(file_path)
-        if size_mb > 50:
-            bot.send_message(
-                call.message.chat.id,
-                f"⚠️ Файл {size_mb:.1f} МБ (>50 МБ). Выбери качество ниже."
-            )
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            downloaded_title = re.sub(r'[\\/*?:"<>|]', '', info.get('title', 'video'))
+            
+            file_path = None
+            for f in os.listdir(TEMP_FOLDER):
+                if downloaded_title in f or (info.get('id') and info.get('id') in f):
+                    full_path = os.path.join(TEMP_FOLDER, f)
+                    if os.path.isfile(full_path):
+                        file_path = full_path
+                        break
+            
+            if not file_path:
+                files = [os.path.join(TEMP_FOLDER, f) for f in os.listdir(TEMP_FOLDER) 
+                        if os.path.isfile(os.path.join(TEMP_FOLDER, f))]
+                if files:
+                    file_path = max(files, key=os.path.getctime)
+            
+            if not file_path or not os.path.exists(file_path):
+                bot.send_message(call.message.chat.id, "❌ Файл не найден.")
+                return
+            
+            size_mb = get_file_size_mb(file_path)
+            if size_mb > 50:
+                bot.send_message(
+                    call.message.chat.id,
+                    f"⚠️ Файл {size_mb:.1f} МБ (>50 МБ). Выбери качество ниже."
+                )
+                os.remove(file_path)
+                return
+            
+            with open(file_path, 'rb') as f:
+                if action == 'a':
+                    bot.send_audio(
+                        call.message.chat.id,
+                        f,
+                        caption=f"🎵 {downloaded_title or title}",
+                        title=downloaded_title or title
+                    )
+                else:
+                    bot.send_video(
+                        call.message.chat.id,
+                        f,
+                        caption=f"🎬 {downloaded_title or title}",
+                        supports_streaming=True
+                    )
+            
             os.remove(file_path)
-            return
-        
-        # Отправляем
-        with open(file_path, 'rb') as f:
-            if action == 'a':
-                bot.send_audio(
-                    call.message.chat.id,
-                    f,
-                    caption=f"🎵 {downloaded_title or title}",
-                    title=downloaded_title or title
-                )
-            else:
-                bot.send_video(
-                    call.message.chat.id,
-                    f,
-                    caption=f"🎬 {downloaded_title or title}",
-                    supports_streaming=True
-                )
-        
-        os.remove(file_path)
-        
-        try:
-            bot.delete_message(call.message.chat.id, call.message.message_id)
-        except:
-            pass
+            
+            try:
+                bot.delete_message(call.message.chat.id, call.message.message_id)
+            except:
+                pass
             
     except Exception as e:
-        error_text = str(e)
-        bot.send_message(
-            call.message.chat.id,
-            f"❌ Критическая ошибка:\n<code>{error_text[:500]}</code>",
-            parse_mode='HTML'
-        )
-        
-        # Чистка
-        for f in os.listdir(TEMP_FOLDER):
-            if title in f or '.mp4' in f or '.mp3' in f:
-                try:
-                    os.remove(os.path.join(TEMP_FOLDER, f))
-                except:
-                    pass
+        bot.send_message(call.message.chat.id, f"❌ Ошибка: {str(e)[:300]}")
 
-# === ЗАПУСК ===
 if __name__ == "__main__":
-    print("🚀 Бот запущен")
-    print(f"✅ FFmpeg: {'Установлен' if check_ffmpeg() else 'НЕ УСТАНОВЛЕН!'}")
-    print(f"✅ Папка: {TEMP_FOLDER}")
+    print("🚀 Бот запущен!")
     bot.infinity_polling()
