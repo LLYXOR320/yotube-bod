@@ -10,7 +10,7 @@ import yt_dlp
 # 1. ВСТАВЬ СВОИ КУКИ В ПЕРЕМЕННУЮ НИЖЕ
 # ==================================================
 COOKIES_STRING = """# Netscape HTTP Cookie File
-[# Netscape HTTP Cookie File
+# Netscape HTTP Cookie File
 # https://curl.haxx.se/rfc/cookie_spec.html
 # This is a generated file! Do not edit.
 
@@ -42,7 +42,7 @@ COOKIES_STRING = """# Netscape HTTP Cookie File
 .youtube.com	TRUE	/	TRUE	1798218681	VISITOR_PRIVACY_METADATA	CgJSVRIEGgAgMw%3D%3D
 .youtube.com	TRUE	/	TRUE	1798115412	__Secure-YNID	19.YT=dw0dlB39NQfcDF1h9KdLxzXoVAFIGwp_xLKNSMwHZ3dIppKc8FModrJauDLdVd9U34YtXqd4Vm9n85ZV9k_kj6XWw-nZZj6Q7tt1A2uHyl2BgjsuCQhZD8GLD9jpiJdhqh_gCcd6zmBtgsafqnxMJBJbAE-L2rDiU3zVHhZN1bBKA1mdhp2rXOl7D5pT2oFDmPtYeHQ2UVF_F_kkVAiH1n9YhQloVLTwTaKOO3Zo_Ui9ESEghKDqneBbfc_i658v_ACR5F0UdCxq9jkE_C2e-5F0cuQDPZttZo4JvKKkF4TQKqgylrcuwuwNW1ha3hv8XKhyN0gcfTTzNK5I_kKq9Q
 .youtube.com	TRUE	/	TRUE	0	YSC	gv-PcuixNYg
-.youtube.com	TRUE	/	TRUE	1798217825	__Secure-ROLLOUT_TOKEN	CMbloLfk3IHPzAEQms-m1oeUlQMYvNy02rOqlQM%3D]
+.youtube.com	TRUE	/	TRUE	1798217825	__Secure-ROLLOUT_TOKEN	CMbloLfk3IHPzAEQms-m1oeUlQMYvNy02rOqlQM%3D
 """
 # ==================================================
 def get_cookies_file():
