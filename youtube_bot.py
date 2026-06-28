@@ -45,16 +45,6 @@ COOKIES_STRING = """# Netscape HTTP Cookie File
 .youtube.com	TRUE	/	TRUE	1798217825	__Secure-ROLLOUT_TOKEN	CMbloLfk3IHPzAEQms-m1oeUlQMYvNy02rOqlQM%3D]
 """
 # ==================================================
-
-BOT_TOKEN = "8935027291:AAGRZOKKwoAYTVGzH2LfrtY4oSHlhsqEdbk"
-bot = telebot.TeleBot(BOT_TOKEN)
-
-TEMP_FOLDER = "downloads"
-if not os.path.exists(TEMP_FOLDER):
-    os.makedirs(TEMP_FOLDER)
-
-storage = {}
-
 def get_cookies_file():
     """Создаёт временный файл с куками и возвращает его путь"""
     try:
@@ -64,6 +54,15 @@ def get_cookies_file():
     except Exception as e:
         print(f"Ошибка создания файла кук: {e}")
         return None
+        
+BOT_TOKEN = "8935027291:AAGRZOKKwoAYTVGzH2LfrtY4oSHlhsqEdbk"
+bot = telebot.TeleBot(BOT_TOKEN)
+
+TEMP_FOLDER = "downloads"
+if not os.path.exists(TEMP_FOLDER):
+    os.makedirs(TEMP_FOLDER)
+
+storage = {}
 
 def extract_video_id(url):
     patterns = [
