@@ -55,7 +55,7 @@ def get_cookies_file():
         print(f"Ошибка создания файла кук: {e}")
         return None
         
-BOT_TOKEN = "8935027291:AAGRZOKKwoAYTVGzH2LfrtY4oSHlhsqEdbk"
+BOT_TOKEN = "8935027291:AAFTbSTUMxgVgyLet65jYDobe63KffZdXB4"
 bot = telebot.TeleBot(BOT_TOKEN)
 
 TEMP_FOLDER = "downloads"
